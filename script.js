@@ -149,6 +149,18 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+async function ensureAudioContext() {
+  if (Tone.context.state !== "running") {
+    await Tone.start();
+  }
+}
+
+function unlockAudioContext() {
+  ensureAudioContext().catch(() => {
+    // ignore failures until a valid user gesture occurs
+  });
+}
+
 function driftTick(now) {
   const dt = (now - lastDriftTime) / 1000;
   lastDriftTime = now;
@@ -166,6 +178,12 @@ function driftTick(now) {
   requestAnimationFrame(driftTick);
 }
 requestAnimationFrame(driftTick);
+
+if (typeof window !== "undefined") {
+  document.documentElement.addEventListener("touchstart", unlockAudioContext, { once: true, passive: true });
+  document.documentElement.addEventListener("mousedown", unlockAudioContext, { once: true });
+  document.documentElement.addEventListener("keydown", unlockAudioContext, { once: true });
+}
 
 // Create multiple LFOs with random depth for per-voice modulation
 const lfoPool = Array.from({ length: 8 }, () => {
@@ -416,9 +434,9 @@ const toggleBtn = document.getElementById("toggle");
 
 if (toggleBtn) {
   toggleBtn.onclick = async () => {
-  await Tone.start();
+    await ensureAudioContext();
 
-  if (!isOn) {
+    if (!isOn) {
     if (!noiseOn) {
       noise.start();
       noiseOn = true;
