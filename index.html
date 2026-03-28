@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Generative Synth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <p class="kicker">Generative Sequencer</p>
+      <h1>Bleep Bloop</h1>
+    </header>
+
+    <button id="toggle" aria-pressed="false">ON</button>
+
+    <section class="sequencer-stack" aria-label="Step sequencer">
+      <div id="seq-top" class="sequencer"></div>
+      <div id="seq-mid" class="sequencer"></div>
+      <div id="seq-bot" class="sequencer"></div>
+    </section>
+
+    <section class="controls">
+      <label for="vibrato-depth">Vibrato Depth</label>
+      <input
+        id="vibrato-depth"
+        type="range"
+        min="0"
+        max="0.25"
+        step="0.01"
+        value="0.125"
+      />
+
+      <label for="drift">Drift</label>
+      <input
+        id="drift"
+        type="range"
+        min="0"
+        max="0.12"
+        step="0.005"
+        value="0.03"
+      />
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
