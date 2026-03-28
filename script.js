@@ -150,8 +150,18 @@ function clamp(n, min, max) {
 }
 
 async function ensureAudioContext() {
-  if (Tone.context.state !== "running") {
-    await Tone.start();
+  if (!Tone.context) return;
+
+  try {
+    if (Tone.context.state !== "running") {
+      await Tone.start();
+    }
+
+    if (Tone.context.state === "suspended" && Tone.context.resume) {
+      await Tone.context.resume();
+    }
+  } catch (error) {
+    console.debug("Audio context resume failed:", error);
   }
 }
 
@@ -180,8 +190,12 @@ function driftTick(now) {
 requestAnimationFrame(driftTick);
 
 if (typeof window !== "undefined") {
-  document.documentElement.addEventListener("touchstart", unlockAudioContext, { once: true, passive: true });
-  document.documentElement.addEventListener("mousedown", unlockAudioContext, { once: true });
+  const unlockOptions = { once: true, passive: true };
+  document.documentElement.addEventListener("pointerdown", unlockAudioContext, unlockOptions);
+  document.documentElement.addEventListener("touchstart", unlockAudioContext, unlockOptions);
+  document.documentElement.addEventListener("touchend", unlockAudioContext, unlockOptions);
+  document.documentElement.addEventListener("mousedown", unlockAudioContext, unlockOptions);
+  document.documentElement.addEventListener("click", unlockAudioContext, unlockOptions);
   document.documentElement.addEventListener("keydown", unlockAudioContext, { once: true });
 }
 
