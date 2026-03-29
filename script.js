@@ -225,8 +225,8 @@ octaveLfo.start();
 
 synth.volume.value = -10;
 
-synth.chain(vibrato, highpass, filter, phaser, overdrive, chorus, delay, delay2, reverb, new Tone.Limiter(), Tone.Destination);
-// 
+synth.chain(Tone.Destination);
+// vibrato, highpass, filter, phaser, overdrive, chorus, delay, delay2, reverb, new Tone.Limiter(), 
 
 // Noise layer routed through the same FX chain.
 const noise = new Tone.Noise("pink");
