@@ -12,7 +12,7 @@ const synth = new Tone.PolySynth(Tone.Synth, {
 });
 
 const filter = new Tone.Filter({
-  frequency: 10000,
+  frequency: 6000,
   type: "lowpass",
   rolloff: -12,
   Q: .2
