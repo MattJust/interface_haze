@@ -133,7 +133,7 @@ if (driftEl) {
 
 const volumeEl = document.getElementById("volume");
 if (volumeEl) {
-  volumeEl.value = "0.7";
+  volumeEl.value = "0.4";
   volumeEl.oninput = (e) => {
     volumeControl.gain.value = parseFloat(e.target.value) || 0;
   };
