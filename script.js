@@ -97,8 +97,8 @@ const chorus = new Tone.Chorus({
   wet: 0.5
 });
 
-// Master volume control (default 70%)
-const volumeControl = new Tone.Gain(0.7);
+// Master volume control (default 40%)
+const volumeControl = new Tone.Gain(0.4);
 
 // 6.2 Hz vibrato applied to all synth output
 const vibrato = new Tone.Vibrato({
