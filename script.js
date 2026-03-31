@@ -7,6 +7,13 @@ const client = new PostHog(
 
 await client.shutdown() // On program exit, call shutdown to stop pending pollers and flush any remaining events
 
+// Initialize browser PostHog analytics if available
+if (typeof window !== 'undefined' && window.posthog) {
+  window.posthog.init('phc_y96KMHdExR3cBkWZrkoi4NTv4APGWf3XfT848JQRbSTh', {
+    api_host: 'https://eu.i.posthog.com',
+  });
+}
+
 // ---------------- AUDIO ----------------
 
 // PolySynth prevents active rows from cutting each other off
