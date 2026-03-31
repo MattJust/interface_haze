@@ -106,9 +106,6 @@ const chorus = new Tone.Chorus({
   wet: 0.5
 });
 
-// Master volume control (default 70%)
-const volumeControl = new Tone.Gain(0.7);
-
 // 6.2 Hz vibrato applied to all synth output
 const vibrato = new Tone.Vibrato({
   frequency: 6.2,
@@ -147,14 +144,6 @@ if (driftEl) {
   driftAmount = parseFloat(driftEl.value) || 0;
   driftEl.oninput = (e) => {
     driftAmount = parseFloat(e.target.value) || 0;
-  };
-}
-
-const volumeEl = document.getElementById("volume");
-if (volumeEl) {
-  volumeEl.value = "0.7";
-  volumeEl.oninput = (e) => {
-    volumeControl.gain.value = parseFloat(e.target.value) || 0;
   };
 }
 
@@ -243,9 +232,9 @@ const octaveLfo = new Tone.LFO({
 });
 octaveLfo.start();
 
-synth.volume.value = 0;
+synth.volume.value = -10;
 
-synth.chain(vibrato, highpass, filter, phaser, overdrive, chorus, delay, delay2, reverb, volumeControl, Tone.Destination);
+synth.chain(vibrato, highpass, filter, phaser, overdrive, chorus, delay, delay2, reverb, new Tone.Limiter(), Tone.Destination);
 // 
 
 // Noise layer routed through the same FX chain.
