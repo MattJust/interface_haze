@@ -107,7 +107,6 @@ const vibrato = new Tone.Vibrato({
 });
 vibrato.wet.value = 1;
 
-// add these before reading vibratoDepthEl
 let vibratoDepth = 0;
 function setVibratoDepth(v) {
   if (vibrato.depth && typeof vibrato.depth.value === "number") {
@@ -117,15 +116,6 @@ function setVibratoDepth(v) {
   }
 }
 setVibratoDepth(vibratoDepth);
-
-const vibratoDepthEl = document.getElementById("vibrato-depth");
-if (vibratoDepthEl) {
-  vibratoDepthEl.value = String(vibratoDepth);
-  vibratoDepthEl.oninput = (e) => {
-    vibratoDepth = parseFloat(e.target.value);
-    setVibratoDepth(vibratoDepth);
-  };
-}
 
 // Drift (amount) modulates vibrato depth at 0.1 Hz
 const DRIFT_HZ = 0.1;
