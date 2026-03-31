@@ -1,12 +1,3 @@
-import { Analytics } from "@vercel/analytics/next"
-
-const client = new PostHog(
-    'phc_y96KMHdExR3cBkWZrkoi4NTv4APGWf3XfT848JQRbSTh',
-    { host: 'https://eu.i.posthog.com' }
-)
-
-await client.shutdown() // On program exit, call shutdown to stop pending pollers and flush any remaining events
-
 // ---------------- AUDIO ----------------
 
 // PolySynth prevents active rows from cutting each other off
@@ -484,12 +475,3 @@ if (toggleBtn) {
   }
   };
 }
-
-client.capture({
-    distinctId: 'distinct_id_of_the_user',
-    event: 'event_name',
-    properties: {
-        property1: 'value',
-        property2: 'value',
-    },
-})
