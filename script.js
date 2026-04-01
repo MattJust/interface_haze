@@ -128,6 +128,7 @@ if (driftEl) {
   driftAmount = parseFloat(driftEl.value) || 0;
   driftEl.oninput = (e) => {
     driftAmount = parseFloat(e.target.value) || 0;
+    if (window.posthog) posthog.capture('drift_changed', { value: driftAmount });
   };
 }
 
@@ -136,6 +137,7 @@ if (volumeEl) {
   volumeEl.value = "0.4";
   volumeEl.oninput = (e) => {
     volumeControl.gain.value = parseFloat(e.target.value) || 0;
+    if (window.posthog) posthog.capture('volume_changed', { value: volumeControl.gain.value });
   };
 }
 
@@ -296,6 +298,7 @@ function renderAll() {
         div.classList.toggle("active");
         div.setAttribute("aria-pressed", row.steps[i] ? "true" : "false");
         div.setAttribute("aria-label", `Step ${i + 1} ${row.steps[i] ? "on" : "off"}`);
+        if (window.posthog) posthog.capture('sequencer_step_toggled', { row_note: row.note, step_index: i, active: row.steps[i] });
       };
 
       div.addEventListener("click", toggleStep);
@@ -462,6 +465,7 @@ if (toggleBtn) {
     isOn = true;
     toggleBtn.innerText = "OFF";
     toggleBtn.setAttribute("aria-pressed", "true");
+    if (window.posthog) posthog.capture('synth_started');
   } else {
     Tone.Transport.stop();
     loop.stop();
@@ -473,6 +477,7 @@ if (toggleBtn) {
     isOn = false;
     toggleBtn.innerText = "ON";
     toggleBtn.setAttribute("aria-pressed", "false");
+    if (window.posthog) posthog.capture('synth_stopped');
   }
   };
 }
