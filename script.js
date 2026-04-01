@@ -1,5 +1,12 @@
 // ---------------- AUDIO ----------------
 
+if (typeof window !== 'undefined' && window.posthog && window.POSTHOG_KEY && window.POSTHOG_HOST) {
+  window.posthog.init(window.POSTHOG_KEY, {
+    api_host: window.POSTHOG_HOST,
+    capture_pageview: true,
+  });
+}
+
 // PolySynth prevents active rows from cutting each other off
 const synth = new Tone.PolySynth(Tone.Synth, {
   oscillator: { type: "sawtooth" },
