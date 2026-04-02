@@ -1,0 +1,21 @@
+{
+  "name": "interface-haze",
+  "version": "1.0.0",
+  "description": "Generative Synth Looper",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static HTML project - no build needed'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "synth",
+    "audio",
+    "generative"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
