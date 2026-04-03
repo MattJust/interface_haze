@@ -89,6 +89,11 @@ h1 {
   transform: scale(0.98);
 }
 
+#toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .sequencer-stack {
   margin-top: var(--space-3);
   display: grid;

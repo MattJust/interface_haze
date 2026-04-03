@@ -265,7 +265,8 @@ let stepIndex = 0;
 let octaveChance = 0.5;
 let fifthChance = 0.2;
 let noteEventCount = 0; // counts triggered note events
-
+let lastStartTime = 0;
+const STOP_LOCK_MS = 1000; // 1 second
 
 // ---------------- INIT ----------------
 
@@ -454,11 +455,20 @@ let isOn = false;
 let noiseOn = false;
 const toggleBtn = document.getElementById("toggle");
 
-if (toggleBtn) {
-  toggleBtn.onclick = async () => {
-    await ensureAudioContext();
+toggleBtn.onclick = async () => {
+  await ensureAudioContext();
 
-    if (!isOn) {
+  const now = performance.now();
+
+  if (!isOn) {
+    // START
+    lastStartTime = now;
+
+toggleBtn.disabled = true;
+setTimeout(() => {
+  toggleBtn.disabled = false;
+}, STOP_LOCK_MS);
+
     if (!noiseOn) {
       noise.start();
       noiseOn = true;
@@ -471,6 +481,11 @@ if (toggleBtn) {
     toggleBtn.setAttribute("aria-pressed", "true");
     if (window.posthog) posthog.capture('synth_started');
   } else {
+    // STOP (guarded)
+    if (now - lastStartTime < STOP_LOCK_MS) {
+      return; // ignore accidental stop
+    }
+
     Tone.Transport.stop();
     loop.stop();
     blockSwapLoop.stop();
@@ -483,5 +498,4 @@ if (toggleBtn) {
     toggleBtn.setAttribute("aria-pressed", "false");
     if (window.posthog) posthog.capture('synth_stopped');
   }
-  };
-}
+};
