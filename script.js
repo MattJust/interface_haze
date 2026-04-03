@@ -130,7 +130,7 @@ if (driftEl) {
     const isOn = driftEl.getAttribute("aria-pressed") === "true";
     const newState = !isOn;
     driftEl.setAttribute("aria-pressed", newState ? "true" : "false");
-    driftEl.textContent = `Drift: ${newState ? "On" : "Off"}`;
+    driftEl.textContent = `${newState ? "On" : "Off"}`;
     driftAmount = newState ? 0.12 : 0;
     if (window.posthog) posthog.capture('drift_toggled', { state: newState ? "on" : "off", value: driftAmount });
   };
