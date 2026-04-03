@@ -1,2 +1,4 @@
 .env
+posthog-config.jspnp
+node_modules
 posthog-config.js
