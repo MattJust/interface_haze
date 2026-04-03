@@ -67,12 +67,23 @@
       <div id="seq-bot" class="sequencer"></div>
     </section>
 
-    <section class="controls">
-      <label for="drift">Drift</label>
-      <input id="drift" type="range" min="0" max="0.12" step="0.005" value="0.03" />
-
-      <label for="volume">Volume</label>
-      <input id="volume" type="range" min="0" max="1" step="0.01" value="0.4" />
+    <section class="controls wide-controls">
+      <div class="sliders">
+        <div class="slider-group">
+          <label for="drift">Drift</label>
+          <button id="drift" aria-pressed="false">Drift: Off</button>
+        </div>
+        <div class="slider-group">
+          <label for="volume">Volume</label>
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" />
+        </div>
+      </div>
+      <p class="instructions">
+        Click buttons, adjust volume.<br>
+        No sound on mobile? Try turning off Silent Mode.<br>
+        It would be very helpful if you filled out a 2-min survey here:<br>
+        <a href="https://forms.gle/UkwbVyk88GaSN4i78" target="_blank">https://forms.gle/UkwbVyk88GaSN4i78</a>
+      </p>
     </section>
   </main>
 

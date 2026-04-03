@@ -130,6 +130,29 @@ h1 {
   border: 1px solid var(--panel-border);
 }
 
+.wide-controls {
+  width: min(920px, 200%);
+}
+
+.sliders {
+  display: flex;
+  gap: 0;
+}
+
+.slider-group {
+  flex: 0 0 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.instructions {
+  margin-top: 12px;
+  font-size: 0.9em;
+  color: var(--text-muted);
+  text-align: left;
+}
+
 .controls label {
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -139,6 +162,27 @@ h1 {
 .controls input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
+}
+
+#drift {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--step-idle);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#drift:hover {
+  background: var(--step-active);
+}
+
+#drift[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--bg-1);
 }
 
 @media (max-width: 580px) {

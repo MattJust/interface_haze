@@ -98,7 +98,7 @@ const chorus = new Tone.Chorus({
 });
 
 // Master volume control (default 40%)
-const volumeControl = new Tone.Gain(0.4);
+const volumeControl = new Tone.Gain(0.3);
 
 // 6.2 Hz vibrato applied to all synth output
 const vibrato = new Tone.Vibrato({
@@ -125,10 +125,14 @@ let lastDriftTime = performance.now();
 
 const driftEl = document.getElementById("drift");
 if (driftEl) {
-  driftAmount = parseFloat(driftEl.value) || 0;
-  driftEl.oninput = (e) => {
-    driftAmount = parseFloat(e.target.value) || 0;
-    if (window.posthog) posthog.capture('drift_changed', { value: driftAmount });
+  driftAmount = 0; // start off
+  driftEl.onclick = () => {
+    const isOn = driftEl.getAttribute("aria-pressed") === "true";
+    const newState = !isOn;
+    driftEl.setAttribute("aria-pressed", newState ? "true" : "false");
+    driftEl.textContent = `Drift: ${newState ? "On" : "Off"}`;
+    driftAmount = newState ? 0.12 : 0;
+    if (window.posthog) posthog.capture('drift_toggled', { state: newState ? "on" : "off", value: driftAmount });
   };
 }
 
@@ -141,8 +145,8 @@ if (volumeEl) {
   };
 }
 
-const DRIFT_TRIGGER_THRESHOLD = 0.4;
-const driftMax = driftEl ? (parseFloat(driftEl.max) || 1) : 1;
+const DRIFT_TRIGGER_THRESHOLD = 0.3;
+const driftMax = 0.12; // fixed max for threshold calculation
 
 function isDriftPastThreshold() {
   return driftMax > 0 && (driftAmount / driftMax) > DRIFT_TRIGGER_THRESHOLD;
