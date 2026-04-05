@@ -1,15 +1,36 @@
+// declare
+let driftLfo, driftNoise, driftNoiseFilter, driftNoiseGain;
+
 // ---------------- AUDIO ----------------
 
-// PolySynth prevents active rows from cutting each other off
+// audio core
 const synth = new Tone.PolySynth(Tone.Synth, {
   oscillator: { type: "sawtooth" },
+  maxPolyphony: 16,
   envelope: {
-    attack: 0.01,
+    attack: 0.02,
     decay: 0.2,
     sustain: 0.9,
     release: 0.5
   }
 });
+
+// create mods
+driftLfo = new Tone.LFO({frequency: 0.08, min: -6, max: 6});
+driftNoise = new Tone.Noise("pink");
+driftNoiseFilter = new Tone.Filter(2, "lowpass");
+driftNoiseGain = new Tone.Gain(1.5);
+
+// connect internally ONLY
+driftNoise.connect(driftNoiseFilter);
+driftNoiseFilter.connect(driftNoiseGain);
+
+function getSmoothNoise(amount) {
+  return (Math.random() - 0.5) * amount;
+}
+
+// start it (in toggle)
+driftNoise.start();
 
 const filter = new Tone.Filter({
   frequency: 4500,
@@ -18,12 +39,17 @@ const filter = new Tone.Filter({
   Q: .2
 });
 
+// 🔒 hard safety on the param
+filter.frequency.value = Number.isFinite(filter.frequency.value)
+  ? filter.frequency.value
+  : 1000;
+
 // create filter envelope and route it to filter cutoff
 const filterEnv = new Tone.FrequencyEnvelope({
-  attack: 0.01,
+  attack: 0.05,
   decay: 0.2,
   sustain: 0.01,
-  release: 0.01,
+  release: 0.5,
   baseFrequency: 350,
   octaves: 1
 });
@@ -73,14 +99,22 @@ const delayFeedbackLfo = new Tone.LFO({
   min: 0.25,
   max: 0.75
 });
-delayFeedbackLfo.connect(delay.feedback);
+
+// NEW: smoothed application
+Tone.Transport.scheduleRepeat(() => {
+  const v = delayFeedbackLfo.value;
+  delay.feedback.rampTo(v, 0.05);
+  delay2.feedback.rampTo(1 - v, 0.05);
+}, "16n");
+
+// delayFeedbackLfo.connect(delay.feedback);
 
 // Invert the same LFO for delay2 so when delay1 feedback is high, delay2 is low.
 const invertedDelayFeedback = new Tone.Multiply(-1);
 const shiftedDelayFeedback = new Tone.Add(1);
 delayFeedbackLfo.connect(invertedDelayFeedback);
 invertedDelayFeedback.connect(shiftedDelayFeedback);
-shiftedDelayFeedback.connect(delay2.feedback);
+// shiftedDelayFeedback.connect(delay2.feedback);
 
 delayFeedbackLfo.start();
 
@@ -107,7 +141,7 @@ const vibrato = new Tone.Vibrato({
 });
 vibrato.wet.value = 1;
 
-let vibratoDepth = 0;
+let vibratoDepth = 0.12;
 function setVibratoDepth(v) {
   if (vibrato.depth && typeof vibrato.depth.value === "number") {
     vibrato.depth.value = v;
@@ -184,17 +218,18 @@ function driftTick(now) {
 
   driftPhase += dt * DRIFT_HZ * Math.PI * 2;
 
-  const modulated = clamp(vibratoDepth + Math.sin(driftPhase) * driftAmount, 0, 0.25);
-  setVibratoDepth(modulated);
+  const normalized = (Math.sin(driftPhase) + 1) / 2;
+  const depth = driftAmount > 0
+    ? normalized * 0.12
+    : 0;
 
-  // optional: keep the vibrato slider visually in sync
-  if (vibratoDepthEl) {
-    vibratoDepthEl.value = String(modulated);
-  }
+  setVibratoDepth(depth);
 
   requestAnimationFrame(driftTick);
 }
+
 requestAnimationFrame(driftTick);
+
 
 if (typeof window !== "undefined") {
   const unlockOptions = { once: true, passive: true };
@@ -206,18 +241,18 @@ if (typeof window !== "undefined") {
   document.documentElement.addEventListener("keydown", unlockAudioContext, { once: true });
 }
 
-// Create multiple LFOs with random depth for per-voice modulation
-const lfoPool = Array.from({ length: 8 }, () => {
-  const lfo = new Tone.LFO({
-    frequency: 6.2,
-    min: -50,
-    max: 50
-  });
-  lfo.start();
-  return lfo;
-});
+// // Create multiple LFOs with random depth for per-voice modulation
+// const lfoPool = Array.from({ length: 8 }, () => {
+//   const lfo = new Tone.LFO({
+//     frequency: 6.2,
+//     min: -50,
+//     max: 50
+//   });
+//   lfo.start();
+//   return lfo;
+// });
 
-let lfoIndex = 0;
+// let lfoIndex = 0;
 
 
 // Fast square LFO for clearly audible octave jumps (-12 or +12 semitones).
@@ -230,9 +265,11 @@ const octaveLfo = new Tone.LFO({
 });
 octaveLfo.start();
 
+const limiter = new Tone.Limiter(-20); // ceiling at -1 dB
+
 synth.volume.value = 0;
 
-synth.chain(vibrato, highpass, filter, phaser, overdrive, chorus, delay, delay2, reverb, volumeControl, Tone.Destination);
+synth.chain(vibrato, highpass, overdrive, filter, phaser, chorus, delay, delay2, reverb, limiter, volumeControl, Tone.Destination);
 // 
 
 // Noise layer routed through the same FX chain.
@@ -413,18 +450,44 @@ const loop = new Tone.Loop(time => {
     if (row.steps[stepIndex]) {
       const root = maybeShift(row.note, stepIndex);
       const chord = buildMinor7(root);
+      const drift = Number.isFinite(driftLfo?.value) ? driftLfo.value : 0;
       const finalChord = chord.map(note => maybeFifth(note, stepIndex));
-      // const modulatedChord = applyOctaveLfoEvery10th(finalChord);
       const modulatedChord = finalChord;
+      const noiseAmount = driftAmount * 5;
+      const spreadAmount = 5;
 
+      const driftedChord = finalChord.map((note, i) => {
+      // centered voice spread
+      const centerOffset = i - (finalChord.length - 1) / 2;
+      const spread = centerOffset * spreadAmount;
+
+      // noise jitter
+      const noise = getSmoothNoise(noiseAmount);
+
+      let totalCents = drift + noise + spread;
+
+    // 🔴 CRITICAL GUARD
+      if (!Number.isFinite(totalCents)) totalCents = 0;
+
+      const freq = Tone.Frequency(note).transpose(totalCents / 100);
+
+      // 🔴 SECOND GUARD
+      if (!Number.isFinite(freq.toFrequency())) return note;
+
+      return Tone.Frequency(note)
+        .transpose(totalCents / 100)
+        .toNote();
+      });
       
-      synth.triggerAttackRelease(modulatedChord, "4n", time);
+      synth.triggerAttackRelease(driftedChord, "4n", time);
       playedThisStep = true;
     }
   });
 
   if (playedThisStep) {
-    filterEnv.triggerAttackRelease("8n", time);
+    if (Number.isFinite(time)) {
+  filterEnv.triggerAttackRelease("8n", time);
+}
   }
 
   stepIndex = (stepIndex + 1) % 8;
@@ -473,12 +536,17 @@ setTimeout(() => {
       noise.start();
       noiseOn = true;
     }
-    loop.start(0);
-    blockSwapLoop.start(0);
+    Tone.Transport.cancel();
+    stepIndex = 0;
+
+    loop.start();
+    blockSwapLoop.start();
+
     Tone.Transport.start();
     isOn = true;
     toggleBtn.innerText = "OFF";
     toggleBtn.setAttribute("aria-pressed", "true");
+    
     if (window.posthog) posthog.capture('synth_started');
   } else {
     // STOP (guarded)
@@ -487,6 +555,7 @@ setTimeout(() => {
     }
 
     Tone.Transport.stop();
+    Tone.Transport.cancel();
     loop.stop();
     blockSwapLoop.stop();
     if (noiseOn) {
