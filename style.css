@@ -69,7 +69,7 @@ h1 {
 
 #toggle {
   appearance: none;
-  border: 0;
+  border: 1px solid rgba(106, 242, 203, 0.15);
   color: #092033;
   background: linear-gradient(135deg, #6af2cb, #5dd4ff);
   font: inherit;
@@ -82,7 +82,14 @@ h1 {
   margin-bottom: var(--space-4);
   box-shadow: 0 8px 24px rgba(35, 160, 194, 0.32);
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+#toggle[aria-pressed="true"] {
+  color: #fff4ee;
+  background: linear-gradient(135deg, #f06a4a, #ff9f5a);
+  border-color: rgba(255, 210, 166, 0.4);
+  box-shadow: 0 10px 28px rgba(240, 106, 74, 0.38);
 }
 
 #toggle:active {

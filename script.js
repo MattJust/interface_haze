@@ -62,6 +62,8 @@ const highpass = new Tone.Filter({
   rolloff: -24
 });
 
+const noteStackGain = new Tone.Gain(1);
+
 // 0.2 Hz LFO to sweep highpass cutoff
 const highpassLfo = new Tone.LFO({
   frequency: 0.15,
@@ -87,27 +89,36 @@ const overdrive = new Tone.Distortion({
 });
 
 
-const delay = new Tone.FeedbackDelay("8n", 0.5);
-delay.wet.value = 0.2;
+// ---------------- CUSTOM DELAY (FILTERED + SATURATED FEEDBACK) ----------------
 
-const delay2 = new Tone.PingPongDelay("8n.", 0.5);
+const delay = new Tone.Delay("8n.");
+const feedbackGain = new Tone.Gain(0.45);
+const delayFilter = new Tone.Filter({
+  type: "bandpass",
+  frequency: 10000,
+  rolloff: -24,
+  Q: 0
+});
+const delayWet = new Tone.Gain(0.35);
+
+const delay2 = new Tone.PingPongDelay("8n", 0.6);
 delay2.wet.value = 0.4;
 
 // Slowly modulate both delay feedback values together.
 const delayFeedbackLfo = new Tone.LFO({
   frequency: 0.05,
   min: 0.25,
-  max: 0.75
+  max: 0.90
 });
 
 // NEW: smoothed application
 Tone.Transport.scheduleRepeat(() => {
   const v = delayFeedbackLfo.value;
-  delay.feedback.rampTo(v, 0.05);
+  feedbackGain.gain.rampTo(v, 0.05);
   delay2.feedback.rampTo(1 - v, 0.05);
 }, "16n");
 
-// delayFeedbackLfo.connect(delay.feedback);
+// delayFeedbackLfo.connect(feedbackGain.gain);
 
 // Invert the same LFO for delay2 so when delay1 feedback is high, delay2 is low.
 const invertedDelayFeedback = new Tone.Multiply(-1);
@@ -159,7 +170,9 @@ let lastDriftTime = performance.now();
 
 const driftEl = document.getElementById("drift");
 if (driftEl) {
-  driftAmount = 0; // start off
+  driftAmount = 0.12;
+  driftEl.setAttribute("aria-pressed", "true");
+  driftEl.textContent = "On";
   driftEl.onclick = () => {
     const isOn = driftEl.getAttribute("aria-pressed") === "true";
     const newState = !isOn;
@@ -269,7 +282,14 @@ const limiter = new Tone.Limiter(-20); // ceiling at -1 dB
 
 synth.volume.value = 0;
 
-synth.chain(vibrato, highpass, overdrive, filter, phaser, chorus, delay, delay2, reverb, limiter, volumeControl, Tone.Destination);
+synth.chain(vibrato, highpass, noteStackGain, overdrive, filter, phaser, chorus, delay);
+
+delay.connect(delayWet);
+delay.connect(delayFilter);
+delayFilter.connect(feedbackGain);
+feedbackGain.connect(delay);
+delayWet.connect(delay2);
+delay2.chain(reverb, limiter, volumeControl, Tone.Destination);
 // 
 
 // Noise layer routed through the same FX chain.
@@ -428,6 +448,16 @@ function buildMinor7(rootNote) {
   ]; 
 }
 
+function dbToGain(db) {
+  return Math.pow(10, db / 20);
+}
+
+function getStackedNoteGain(activeCount) {
+  if (activeCount === 2) return dbToGain(-3);
+  if (activeCount >= 3) return dbToGain(-6);
+  return 1;
+}
+
 // function applyOctaveLfoEvery10th(notes) {
 //   const semis = octaveLfo.value >= 0 ? 12 : -12; // square state: -12 or +12
 //   return notes.map(n => Tone.Frequency(n).transpose(semis).toNote());
@@ -439,6 +469,14 @@ Tone.Transport.bpm.rampTo(125); // targetBpm, seconds
 
 const loop = new Tone.Loop(time => {
   let playedThisStep = false;
+  const activeRowCount = rows.reduce((count, row) => (
+    row.steps[stepIndex] ? count + 1 : count
+  ), 0);
+
+  noteStackGain.gain.setValueAtTime(
+    getStackedNoteGain(activeRowCount),
+    time
+  );
 
   rows.forEach(row => {
     if (!row.el) return;
@@ -544,8 +582,9 @@ setTimeout(() => {
 
     Tone.Transport.start();
     isOn = true;
-    toggleBtn.innerText = "OFF";
+    toggleBtn.innerText = "Stop";
     toggleBtn.setAttribute("aria-pressed", "true");
+    toggleBtn.setAttribute("aria-label", "Stop");
     
     if (window.posthog) posthog.capture('synth_started');
   } else {
@@ -563,8 +602,9 @@ setTimeout(() => {
       noiseOn = false;
     }
     isOn = false;
-    toggleBtn.innerText = "ON";
+    toggleBtn.innerText = "Start";
     toggleBtn.setAttribute("aria-pressed", "false");
+    toggleBtn.setAttribute("aria-label", "Start");
     if (window.posthog) posthog.capture('synth_stopped');
   }
 };
