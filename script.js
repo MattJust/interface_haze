@@ -296,7 +296,7 @@ delay2.chain(reverb, limiter, volumeControl, Tone.Destination);
 const noise = new Tone.Noise("pink");
 const noiseGain = new Tone.Gain(0);
 noise.connect(noiseGain);
-noiseGain.connect(vibrato);
+noiseGain.connect(highpass);
 
 // ~30 second cycle from silence to just under the main synth level.
 const noiseLevelLfo = new Tone.LFO({
