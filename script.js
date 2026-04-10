@@ -95,7 +95,7 @@ const delay = new Tone.Delay("8n.");
 const feedbackGain = new Tone.Gain(0.45);
 const delayFilter = new Tone.Filter({
   type: "bandpass",
-  frequency: 10000,
+  frequency: 1000,
   rolloff: -24,
   Q: 0
 });
