@@ -91,8 +91,8 @@ const overdrive = new Tone.Distortion({
 
 // ---------------- CUSTOM DELAY (FILTERED + SATURATED FEEDBACK) ----------------
 
-const delay = new Tone.Delay("8n.");
-delay.wet.value = 0.25;   // added to change wet/dry from 100% wet.
+const delay = new Tone.PingPongDelay("8n.", 0.6);
+delay.wet.value = 0.25;
 const feedbackGain = new Tone.Gain(0.45);
 const delayFilter = new Tone.Filter({
   type: "bandpass",
